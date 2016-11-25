@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--!
+Genshi template for producing XML encoded X3D output convertd from 3MF files
+Arguments:
+
+model : Markup which contains; as X3D shapes and transforms, the geometry content of the
+'build' model from an 3MF file.
+
+unit : a dictionary with keys  'name' (string) and  'conversionFactor' (float)
+       example: unit = {'name':'inch', 'conversionFactor': 0.0254}
+       
+viewpoints [optional] : list of Markup elements, each one corresponding to a X3D Viewpoint node
+                        
+meta_tags [optional] : dictionary with keys that are names of meta tag. value 'content'
+ -->
+
+<?python
+viewpoints = value_of(viewpoints, [])
+meta_tags  = value_of(metatags, {})
+?>
+
+<X3D xmlns:py="http://genshi.edgewall.org/" profile='Interchange' version='3.3' 
+     xmlns:xsd='http://www.w3.org/2001/XMLSchema-instance' 
+     xsd:noNamespaceSchemaLocation='http://www.web3d.org/specifications/x3d-3.3.xsd'>
+     
+    <head>
+        <unit category='length' py:attrs="{'name':unit['name'], 'conversionFactor':('%f' % (unit['conversionFactor'],))}" />
+        <meta py:for="ky,val in meta_tags.items()" py:attrs="{'name':ky, 'content':val}"/>
+    </head>
+    <Scene>
+        <NavigationInfo/>
+        <Background skyColor="0.9 0.9 0.9"/>
+        <Viewpoint py:for="viewpoint in viewpoints" py:replace="viewpoint"/>
+        
+        <Group py:replace="model"/>
+    </Scene>
+</X3D>
