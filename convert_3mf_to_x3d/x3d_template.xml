@@ -12,13 +12,9 @@ unit : a dictionary with keys  'name' (string) and  'conversionFactor' (float)
        
 viewpoints [optional] : list of Markup elements, each one corresponding to a X3D Viewpoint node
                         
-meta_tags [optional] : dictionary with keys that are names of meta tag. value 'content'
+meta_tags [optional] : a sequence of 2-tuples (name, content)
  -->
 
-<?python
-viewpoints = value_of(viewpoints, [])
-meta_tags  = value_of(metatags, {})
-?>
 
 <X3D xmlns:py="http://genshi.edgewall.org/" profile='Interchange' version='3.3' 
      xmlns:xsd='http://www.w3.org/2001/XMLSchema-instance' 
@@ -26,7 +22,7 @@ meta_tags  = value_of(metatags, {})
      
     <head>
         <unit category='length' py:attrs="{'name':unit['name'], 'conversionFactor':('%f' % (unit['conversionFactor'],))}" />
-        <meta py:for="ky,val in meta_tags.items()" py:attrs="{'name':ky, 'content':val}"/>
+        <meta py:for="ky,val in metatags" py:attrs="{'name':ky, 'content':val}"/>
     </head>
     <Scene>
         <NavigationInfo/>
