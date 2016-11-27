@@ -168,37 +168,24 @@ def convert_to_X3D(input_path, output_stream, **keyw):
                             
     group = ET.Element("Group")
     
+    objects_defid = dict()  # will maintain list of points already
+                            # rendered as Shapes and which can be
+                            # reused with USE/DEF construction
+                            # on Shape nodes
+                            
     for itemNode in items:
         itemid = itemNode.get('objectid')
         if itemid is None:
             raise ValueError("no objectid located")
         logger.debug("build item id: %s" % (itemid,))
-        for objectNode in resourcesNode.findall( ns_3mf('object')):
-            if objectNode.get('id') == itemid:
-                break
-        else:
-            raise ValueError("resource not found for id: %s" % itemid)
+        
          
         transformString = itemNode.get('transform',None)
         if transformString is not None:
             buildMatrix = matrix_from_string( transformString )
         else:
             buildMatrix = identity_matrix
-            
-        meshNode = objectNode.find(ns_3mf('mesh'))
-        if meshNode is None:
-            raise ValueError("No mesh node for object id %s" % itemid)
-        
-        meshData = get_3MF_mesh( meshNode, ns_3mf)
-        NPoints = len( meshData['points'] )
-        NTriangles = len( meshData['triangles'] )
-        logger.debug("object %s mesh: %i vertices, %i triangles" % \
-                     (itemid, NPoints, NTriangles))
-    
-        buildPoints = transform_points(buildMatrix, meshData['points'])
-        globalPoints.append(buildPoints.min(axis=0))
-        globalPoints.append(buildPoints.max(axis=0))
-        
+
         itemTransform = ET.SubElement(group, "Transform")
         transformData = transform_attributes_from_matrix( buildMatrix )
         if 'translation' in transformData:
@@ -207,19 +194,49 @@ def convert_to_X3D(input_path, output_stream, **keyw):
             itemTransform.set('rotation', SFVec( transformData['rotation'] ))
         if 'scale' in transformData:
             itemTransform.set('scale', SFVec( transformData['scale'] ))
-            
-        shape = ET.SubElement(itemTransform,"Shape")
-        geometry = ET.SubElement( shape, "IndexedTriangleSet")
-        geometry.set('ccw','TRUE')
-        geometry.set('solid','TRUE')    
-        geometry.set('index', MFInt( meshData['triangles'].reshape((-1,))))
-        
-        coordinate = ET.SubElement(geometry, "Coordinate")
-        coordinate.set('point', MFVec(meshData['points']))
 
-        appearance = ET.SubElement(shape, "Appearance")
-        material = ET.SubElement(appearance, 'Material')
-        material.set('diffuseColor', SFColor( params['color'] ))
+        shape = ET.SubElement(itemTransform,"Shape")
+        object_id_x3d = "object_x3d_%s" % itemid
+        if object_id_x3d in objects_defid:             
+            shape.set('USE', object_id_x3d)
+            logger.debug("Reusing resource object %s" % object_id_x3d)
+        else:            
+            for objectNode in resourcesNode.findall( ns_3mf('object')):
+                if objectNode.get('id') == itemid:
+                    break
+            else:
+                raise ValueError("resource not found for id: %s" % itemid)
+            
+            meshNode = objectNode.find(ns_3mf('mesh'))
+            if meshNode is None:
+                raise ValueError("No mesh node for object id %s" % itemid)
+        
+            meshData = get_3MF_mesh( meshNode, ns_3mf)
+            NPoints = len( meshData['points'] )
+            NTriangles = len( meshData['triangles'] )
+            logger.debug("object %s mesh: %i vertices, %i triangles" % \
+                         (itemid, NPoints, NTriangles))
+    
+            objects_defid[object_id_x3d] = meshData['points']
+            logger.debug("defining shape for resource object %s" %  object_id_x3d)
+
+            shape.set('DEF', object_id_x3d)
+            geometry = ET.SubElement( shape, "IndexedTriangleSet")
+            geometry.set('ccw','TRUE')
+            geometry.set('solid','TRUE')    
+            geometry.set('index', MFInt( meshData['triangles'].reshape((-1,))))
+            
+            coordinate = ET.SubElement(geometry, "Coordinate")
+            coordinate.set('point', MFVec(meshData['points']))
+    
+            appearance = ET.SubElement(shape, "Appearance")
+            material = ET.SubElement(appearance, 'Material')
+            material.set('diffuseColor', SFColor( params['color'] ))
+            
+        buildPoints = transform_points(buildMatrix, objects_defid[object_id_x3d])            
+        globalPoints.append(buildPoints.min(axis=0))
+        globalPoints.append(buildPoints.max(axis=0))
+    #################### End iteration over build/item elements ###############        
 
         
     # form the global bounds array of shape (2,3)
