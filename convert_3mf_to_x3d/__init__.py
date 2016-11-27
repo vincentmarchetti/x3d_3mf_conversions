@@ -1,5 +1,10 @@
-# test non-standard library dependencies
+import logging
 
+logger = logging.getLogger('X3D_3MF')
+logger.setLevel(logging.WARN)
+logger.addHandler( logging.NullHandler() )
+
+# test non-standard library dependencies
 try:
     try:
         import genshi
