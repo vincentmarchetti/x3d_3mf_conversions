@@ -8,6 +8,12 @@ A 3MF matrix will be represented by a numpy array of shape (4,3)
 Note that numpy.dot function implements matrix multiplication for 1 and 2 rank arrays
 """
 
+def _identity_matrix():
+    from numpy import array, float_
+    return array([(1,0,0),(0,1,0),(0,0,1),(0,0,0)], float_)
+    
+identity_matrix = _identity_matrix()
+
 def matrix_from_string(a):
     """
     a is a string of 12 numerical values separated by
@@ -27,6 +33,7 @@ def matrix_from_string(a):
         
     from numpy import array, float_
     return array( [values[k:k+3] for k in range(0,12,3)], float_)
+
 
 
 def transform_points(M, points):
