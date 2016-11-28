@@ -124,7 +124,6 @@ def convert_to_X3D(input_path, output_stream, **keyw):
     import opc
     logger.info( "opening 3mf file %s" % input_path )
     pkg = opc.OpcPackage.open(input_path)
-    logger.debug( "opened 3mf file to %s" % repr(pkg))
 
     try:
         logger.info( "main document: %s" % pkg.main_document )
@@ -132,7 +131,7 @@ def convert_to_X3D(input_path, output_stream, **keyw):
         logger.info( "No main document found" )
 
     for part in pkg.parts:
-        logger.debug( "part %s : %s : %s" % (part.partname, part.content_type, len(part.blob)))
+        logger.info( "part %s : mimetype: %s : byte-count %i" % (part.partname, part.content_type, len(part.blob)))
  
 
     from io import BytesIO
@@ -141,10 +140,10 @@ def convert_to_X3D(input_path, output_stream, **keyw):
     # alternative: import xml.etree.ElementTree as ET
     try:
         import lxml.etree as  ET
-        logger.info("Using lxml as ElementTree")
+        logger.debug("Using lxml as ElementTree")
     except ImportError:
         import xml.etree.ElementTree as ET
-        logger.info("Using xml.etree.ElementTree as ElementTree")
+        logger.debug("Using xml.etree.ElementTree as ElementTree")
 
     try:
         doc = ET.parse(  model_as_file )
@@ -296,11 +295,9 @@ def convert_to_X3D(input_path, output_stream, **keyw):
     globalPoints = array(globalPoints)
     global_bounds = array([globalPoints.min(axis=0), globalPoints.max(axis=0)])
     
-    logger.info("global bounds: %s" % (repr(global_bounds),))
-
     centerOfRotation = 0.5*(global_bounds[0] + global_bounds[1])
     extent = max( (global_bounds[1] - global_bounds[0])[:2] )
-    logger.debug("extent: %f" % (extent,))
+    logger.debug("total build horizontal extent: %f" % (extent,))
     
     viewpointHeight = global_bounds[1,2] + 8.0 * extent
     position = array( list( centerOfRotation[:2]) + [viewpointHeight] )
