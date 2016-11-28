@@ -273,8 +273,8 @@ def convert_to_X3D(input_path, output_stream, **keyw):
                     
             # add geometry and appearance
             geometry = ET.SubElement( shape, "IndexedTriangleSet")
-            geometry.set('ccw','TRUE')
-            geometry.set('solid','TRUE')    
+            geometry.set('ccw','true')
+            geometry.set('solid','true')    
             geometry.set('index', MFInt( meshData['triangles'].reshape((-1,))))
             
             coordinate = ET.SubElement(geometry, "Coordinate")
@@ -327,4 +327,5 @@ def convert_to_X3D(input_path, output_stream, **keyw):
     
     stream = template.generate(  **args)
     
-    output_stream.write( stream.render('xml') )
+    X3D_DOCTYPE=('X3D', "ISO//Web3D//DTD X3D 3.3//EN", "http://www.web3d.org/specifications/x3d-3.3.dtd")
+    stream.render(method='xml', encoding="utf-8", out=output_stream, doctype=X3D_DOCTYPE)
