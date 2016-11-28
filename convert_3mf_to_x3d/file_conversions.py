@@ -168,6 +168,11 @@ def convert_to_X3D(input_path, output_stream, **keyw):
         x3d_name = metadata_mapping.get(name, name)
         logger.debug("metadata %s -> %s" % (name, x3d_name))
         metaitems.append( (x3d_name, mNode.text))
+    from . import version
+    generator = "convert_3mf_to_x3d %s" % version
+    metaitems.append( ('generator', generator) )
+    
+    
     
     resourcesNode=modelNode.find(ns_3mf('resources'))
     if resourcesNode is None:
@@ -255,6 +260,18 @@ def convert_to_X3D(input_path, output_stream, **keyw):
             logger.debug("defining shape for resource object %s" %  object_id_x3d)
 
             shape.set('DEF', object_id_x3d)
+            
+            # add Metadata nodes derived from objectNode attributes
+            objectSetNode = ET.SubElement(shape,"MetadataSet")
+            objectSetNode.set("name", "3MF:resources/object")
+            for attribName in ("type", "partnumber", "name"):
+                attribValue = objectNode.get(attribName, None)
+                if attribValue is not None:
+                    objectMetaNode = ET.SubElement(objectSetNode,"MetadataString")
+                    objectMetaNode.set("name", attribName)
+                    objectMetaNode.set("value", MFString([attribValue]))
+                    
+            # add geometry and appearance
             geometry = ET.SubElement( shape, "IndexedTriangleSet")
             geometry.set('ccw','TRUE')
             geometry.set('solid','TRUE')    

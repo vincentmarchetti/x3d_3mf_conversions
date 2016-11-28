@@ -1,3 +1,5 @@
+version = "0.1"
+
 import logging
 
 logger = logging.getLogger('X3D_3MF')
