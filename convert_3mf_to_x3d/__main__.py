@@ -1,6 +1,8 @@
 import logging, sys
 from . import logger
-logging.getLogger().addHandler( logging.StreamHandler( sys.stderr))
+handler = logging.StreamHandler( sys.stderr)
+handler.setFormatter(logging.Formatter("%(levelname)s %(message)s"))
+logging.getLogger().addHandler( handler )
 logger.setLevel(logging.WARN)
 
 
