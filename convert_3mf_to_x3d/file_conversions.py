@@ -55,8 +55,31 @@ def MFInt(indices):
     """
     return " ".join([('%i' % i) for i in indices])
 
-
-
+def MFString(string_list):
+    """
+    input a list of unicode strings
+    output: a unicode string formed by encoding, enclosing each
+    item in double quotes, and concatenating
+    
+    27 Nov 2016: The complete case is as yet unimplemented,
+    to avoid sending bad X3D into the world will instead fail with
+    a Exception if any of the elements of list contain a XML special case in '"&<>
+    """
+    from . import logger
+    special_characters = u"\'\"&<>"
+    assert( len(special_characters) == 5)
+    
+    # check
+    unicode_type = type(u"")
+    for item in string_list:
+        if not type(item) is unicode_type:
+            logger.warn("Non unicode entry for MFString: %s" % (repr(item),))
+        for c in special_characters:
+            if c in item:
+                raise ValueError("Unimplemented case: special character in MFString item: %s" % (repr(item),))
+                
+    return " ".join([u'"%s"' % item for item in string_list])
+    
 
 X3D_UNITS = {
     'millimeter' : ('millimeter', 0.001),
@@ -195,6 +218,17 @@ def convert_to_X3D(input_path, output_stream, **keyw):
         if 'scale' in transformData:
             itemTransform.set('scale', SFVec( transformData['scale'] ))
 
+        # add Metadata nodes pertinent to this 3MF build/item
+        metadataSetNode = ET.SubElement(itemTransform,"MetadataSet")
+        metadataSetNode.set("name","3MF:build/item")
+        itemPartnumber = itemNode.get("partnumber",None)
+        if itemPartnumber:
+            ET.SubElement(metadataSetNode,
+                          "MetadataString",
+                          name='partnumber',
+                          value=MFString([itemPartnumber]))
+                          
+                          
         shape = ET.SubElement(itemTransform,"Shape")
         object_id_x3d = "object_x3d_%s" % itemid
         if object_id_x3d in objects_defid:             
