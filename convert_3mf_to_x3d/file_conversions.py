@@ -226,12 +226,13 @@ def convert_to_X3D(input_path, output_stream, **keyw):
         # add Metadata nodes pertinent to this 3MF build/item
         metadataSetNode = ET.SubElement(itemTransform,"MetadataSet")
         metadataSetNode.set("name","3MF:build/item")
-        itemPartnumber = itemNode.get("partnumber",None)
-        if itemPartnumber:
-            ET.SubElement(metadataSetNode,
-                          "MetadataString",
-                          name='partnumber',
-                          value=MFString([itemPartnumber]))
+        itemPartnumber = itemNode.get("partnumber","")
+
+        ET.SubElement(metadataSetNode,
+                      "MetadataString",
+                      name='partnumber',
+                      containerField = 'value',
+                      value=MFString([itemPartnumber]))
                           
                           
         shape = ET.SubElement(itemTransform,"Shape")
@@ -265,11 +266,12 @@ def convert_to_X3D(input_path, output_stream, **keyw):
             objectSetNode = ET.SubElement(shape,"MetadataSet")
             objectSetNode.set("name", "3MF:resources/object")
             for attribName in ("type", "partnumber", "name"):
-                attribValue = objectNode.get(attribName, None)
-                if attribValue is not None:
-                    objectMetaNode = ET.SubElement(objectSetNode,"MetadataString")
-                    objectMetaNode.set("name", attribName)
-                    objectMetaNode.set("value", MFString([attribValue]))
+                attribValue = objectNode.get(attribName, "")
+            
+                objectMetaNode = ET.SubElement(objectSetNode,"MetadataString")
+                objectMetaNode.set("name", attribName)
+                objectMetaNode.set("value", MFString([attribValue]))
+                objectMetaNode.set("containerField", "value")
                     
             # add geometry and appearance
             geometry = ET.SubElement( shape, "IndexedTriangleSet")
